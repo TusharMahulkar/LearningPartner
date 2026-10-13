@@ -1,0 +1,15 @@
+# Visual Studio
+.vs/
+**/.vs/
+*.suo
+*.user
+
+# .NET build output
+**/bin/
+**/obj/
+
+# User-specific files
+*.csproj.user
+
+# Backup Git repository metadata
+eShopOnWeb-git-backup/
