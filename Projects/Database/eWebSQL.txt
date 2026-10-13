@@ -1,0 +1,281 @@
+/*
+    eShopWebDB - Entity Framework Core teaching database
+    SQL Server / SSMS
+    Includes schema, relationships, indexes, and sample data.
+
+    Warning: This script drops and recreates eShopWebDB if it already exists.
+    Remove the DROP DATABASE section if you need to preserve an existing database.
+*/
+USE master;
+GO
+
+ 
+
+CREATE DATABASE eShopWebDB;
+GO
+
+USE eShopWebDB;
+GO
+
+-- 1. Categories: one category can contain many products
+CREATE TABLE dbo.Categories
+(
+    CategoryId   INT IDENTITY(1,1) CONSTRAINT PK_Categories PRIMARY KEY,
+    CategoryName NVARCHAR(100) NOT NULL,
+    Description  NVARCHAR(500) NULL,
+    IsActive     BIT NOT NULL CONSTRAINT DF_Categories_IsActive DEFAULT (1),
+    CreatedDate  DATETIME2 NOT NULL CONSTRAINT DF_Categories_CreatedDate DEFAULT (SYSDATETIME()),
+    CONSTRAINT UQ_Categories_CategoryName UNIQUE (CategoryName)
+);
+GO
+
+-- 2. Customers
+CREATE TABLE dbo.Customers
+(
+    CustomerId  INT IDENTITY(1,1) CONSTRAINT PK_Customers PRIMARY KEY,
+    FirstName   NVARCHAR(50) NOT NULL,
+    LastName    NVARCHAR(50) NOT NULL,
+    Email       NVARCHAR(150) NOT NULL,
+    Phone       NVARCHAR(20) NULL,
+    CreatedDate DATETIME2 NOT NULL CONSTRAINT DF_Customers_CreatedDate DEFAULT (SYSDATETIME()),
+    IsActive    BIT NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT (1),
+    CONSTRAINT UQ_Customers_Email UNIQUE (Email)
+);
+GO
+
+-- 3. Addresses: one customer can save multiple addresses
+CREATE TABLE dbo.Addresses
+(
+    AddressId   INT IDENTITY(1,1) CONSTRAINT PK_Addresses PRIMARY KEY,
+    CustomerId  INT NOT NULL,
+    AddressLine NVARCHAR(200) NOT NULL,
+    City        NVARCHAR(100) NOT NULL,
+    State       NVARCHAR(100) NOT NULL,
+    PostalCode  NVARCHAR(12) NOT NULL,
+    Country     NVARCHAR(100) NOT NULL CONSTRAINT DF_Addresses_Country DEFAULT (N'India'),
+    IsDefault   BIT NOT NULL CONSTRAINT DF_Addresses_IsDefault DEFAULT (0),
+    CONSTRAINT FK_Addresses_Customers FOREIGN KEY (CustomerId)
+        REFERENCES dbo.Customers(CustomerId)
+);
+GO
+
+-- 4. Products: each product belongs to one category
+CREATE TABLE dbo.Products
+(
+    ProductId     INT IDENTITY(1,1) CONSTRAINT PK_Products PRIMARY KEY,
+    CategoryId    INT NOT NULL,
+    ProductName   NVARCHAR(150) NOT NULL,
+    Description   NVARCHAR(1000) NULL,
+    SKU           NVARCHAR(50) NOT NULL,
+    Price         DECIMAL(12,2) NOT NULL,
+    StockQuantity INT NOT NULL CONSTRAINT DF_Products_StockQuantity DEFAULT (0),
+    IsActive      BIT NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT (1),
+    CreatedDate   DATETIME2 NOT NULL CONSTRAINT DF_Products_CreatedDate DEFAULT (SYSDATETIME()),
+    CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryId)
+        REFERENCES dbo.Categories(CategoryId),
+    CONSTRAINT UQ_Products_SKU UNIQUE (SKU),
+    CONSTRAINT CK_Products_Price CHECK (Price >= 0),
+    CONSTRAINT CK_Products_StockQuantity CHECK (StockQuantity >= 0)
+);
+GO
+
+-- 5. Orders: a customer can place multiple orders
+CREATE TABLE dbo.Orders
+(
+    OrderId     INT IDENTITY(1,1) CONSTRAINT PK_Orders PRIMARY KEY,
+    CustomerId  INT NOT NULL,
+    AddressId   INT NOT NULL,
+    OrderDate   DATETIME2 NOT NULL CONSTRAINT DF_Orders_OrderDate DEFAULT (SYSDATETIME()),
+    OrderStatus NVARCHAR(20) NOT NULL CONSTRAINT DF_Orders_OrderStatus DEFAULT (N'Pending'),
+    TotalAmount DECIMAL(12,2) NOT NULL CONSTRAINT DF_Orders_TotalAmount DEFAULT (0),
+    Notes       NVARCHAR(500) NULL,
+    CONSTRAINT FK_Orders_Customers FOREIGN KEY (CustomerId)
+        REFERENCES dbo.Customers(CustomerId),
+    CONSTRAINT FK_Orders_Addresses FOREIGN KEY (AddressId)
+        REFERENCES dbo.Addresses(AddressId),
+    CONSTRAINT CK_Orders_TotalAmount CHECK (TotalAmount >= 0),
+    CONSTRAINT CK_Orders_OrderStatus CHECK
+        (OrderStatus IN (N'Pending', N'Confirmed', N'Shipped', N'Delivered', N'Cancelled'))
+);
+GO
+
+-- 6. OrderItems: bridge between Orders and Products
+CREATE TABLE dbo.OrderItems
+(
+    OrderItemId INT IDENTITY(1,1) CONSTRAINT PK_OrderItems PRIMARY KEY,
+    OrderId     INT NOT NULL,
+    ProductId   INT NOT NULL,
+    Quantity    INT NOT NULL,
+    UnitPrice   DECIMAL(12,2) NOT NULL,
+    CONSTRAINT FK_OrderItems_Orders FOREIGN KEY (OrderId)
+        REFERENCES dbo.Orders(OrderId),
+    CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductId)
+        REFERENCES dbo.Products(ProductId),
+    CONSTRAINT CK_OrderItems_Quantity CHECK (Quantity > 0),
+    CONSTRAINT CK_OrderItems_UnitPrice CHECK (UnitPrice >= 0),
+    CONSTRAINT UQ_OrderItems_Order_Product UNIQUE (OrderId, ProductId)
+);
+GO
+
+-- 7. Payments: an order can have multiple payment attempts/records
+CREATE TABLE dbo.Payments
+(
+    PaymentId           INT IDENTITY(1,1) CONSTRAINT PK_Payments PRIMARY KEY,
+    OrderId             INT NOT NULL,
+    PaymentDate         DATETIME2 NOT NULL CONSTRAINT DF_Payments_PaymentDate DEFAULT (SYSDATETIME()),
+    Amount              DECIMAL(12,2) NOT NULL,
+    PaymentMethod       NVARCHAR(30) NOT NULL,
+    PaymentStatus       NVARCHAR(20) NOT NULL CONSTRAINT DF_Payments_PaymentStatus DEFAULT (N'Pending'),
+    TransactionReference NVARCHAR(100) NULL,
+    CONSTRAINT FK_Payments_Orders FOREIGN KEY (OrderId)
+        REFERENCES dbo.Orders(OrderId),
+    CONSTRAINT CK_Payments_Amount CHECK (Amount > 0),
+    CONSTRAINT CK_Payments_Method CHECK
+        (PaymentMethod IN (N'UPI', N'Card', N'NetBanking', N'CashOnDelivery', N'Wallet')),
+    CONSTRAINT CK_Payments_Status CHECK
+        (PaymentStatus IN (N'Pending', N'Success', N'Failed', N'Refunded'))
+);
+GO
+
+-- 8. Reviews: customers review products
+CREATE TABLE dbo.Reviews
+(
+    ReviewId   INT IDENTITY(1,1) CONSTRAINT PK_Reviews PRIMARY KEY,
+    CustomerId INT NOT NULL,
+    ProductId  INT NOT NULL,
+    Rating     INT NOT NULL,
+    Comment    NVARCHAR(1000) NULL,
+    ReviewDate DATETIME2 NOT NULL CONSTRAINT DF_Reviews_ReviewDate DEFAULT (SYSDATETIME()),
+    CONSTRAINT FK_Reviews_Customers FOREIGN KEY (CustomerId)
+        REFERENCES dbo.Customers(CustomerId),
+    CONSTRAINT FK_Reviews_Products FOREIGN KEY (ProductId)
+        REFERENCES dbo.Products(ProductId),
+    CONSTRAINT CK_Reviews_Rating CHECK (Rating BETWEEN 1 AND 5),
+    CONSTRAINT UQ_Reviews_Customer_Product UNIQUE (CustomerId, ProductId)
+);
+GO
+
+-- Helpful indexes for common joins and filters
+CREATE INDEX IX_Addresses_CustomerId ON dbo.Addresses(CustomerId);
+CREATE INDEX IX_Products_CategoryId ON dbo.Products(CategoryId);
+CREATE INDEX IX_Orders_CustomerId_OrderDate ON dbo.Orders(CustomerId, OrderDate);
+CREATE INDEX IX_OrderItems_ProductId ON dbo.OrderItems(ProductId);
+CREATE INDEX IX_Payments_OrderId ON dbo.Payments(OrderId);
+CREATE INDEX IX_Reviews_ProductId ON dbo.Reviews(ProductId);
+GO
+
+-- Sample data
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES
+(N'Electronics', N'Computers, phones, and electronic devices'),
+(N'Accessories', N'Computer and mobile accessories'),
+(N'Clothing', N'Clothing and fashion'),
+(N'Home & Kitchen', N'Products for home and kitchen');
+GO
+
+INSERT INTO dbo.Customers (FirstName, LastName, Email, Phone)
+VALUES
+(N'Rahul', N'Sharma', N'rahul.sharma@example.com', N'9876543210'),
+(N'Priya', N'Patil', N'priya.patil@example.com', N'9876543211'),
+(N'Amit', N'Joshi', N'amit.joshi@example.com', N'9876543212'),
+(N'Neha', N'Deshmukh', N'neha.deshmukh@example.com', N'9876543213'),
+(N'Vikram', N'Kulkarni', N'vikram.kulkarni@example.com', N'9876543214');
+GO
+
+INSERT INTO dbo.Addresses (CustomerId, AddressLine, City, State, PostalCode, IsDefault)
+VALUES
+(1, N'12 MG Road', N'Pune', N'Maharashtra', N'411001', 1),
+(1, N'Flat 4, Green Park', N'Pune', N'Maharashtra', N'411045', 0),
+(2, N'25 FC Road', N'Pune', N'Maharashtra', N'411004', 1),
+(3, N'18 Dharampeth', N'Nagpur', N'Maharashtra', N'440010', 1),
+(4, N'7 College Road', N'Nashik', N'Maharashtra', N'422005', 1),
+(5, N'44 Civil Lines', N'Nagpur', N'Maharashtra', N'440001', 1);
+GO
+
+INSERT INTO dbo.Products
+(CategoryId, ProductName, Description, SKU, Price, StockQuantity)
+VALUES
+(1, N'Business Laptop', N'14-inch laptop for everyday work', N'EL-LAP-001', 55000.00, 10),
+(1, N'Android Smartphone', N'128 GB smartphone', N'EL-MOB-001', 25000.00, 25),
+(1, N'LED Monitor', N'24-inch Full HD monitor', N'EL-MON-001', 9500.00, 12),
+(2, N'Wireless Mouse', N'Wireless optical mouse', N'AC-MOU-001', 800.00, 50),
+(2, N'USB Keyboard', N'Full-size USB keyboard', N'AC-KEY-001', 1200.00, 35),
+(2, N'USB-C Hub', N'6-in-1 USB-C hub', N'AC-HUB-001', 2200.00, 20),
+(3, N'Cotton T-Shirt', N'Everyday cotton T-shirt', N'CL-TSH-001', 599.00, 100),
+(3, N'Running Shoes', N'Lightweight running shoes', N'CL-SHO-001', 2499.00, 30),
+(4, N'Electric Kettle', N'1.5-litre electric kettle', N'HK-KET-001', 1499.00, 18),
+(4, N'Mixer Grinder', N'Kitchen mixer grinder', N'HK-MIX-001', 3299.00, 8);
+GO
+
+-- Orders reference addresses owned by the same customer in this sample data.
+INSERT INTO dbo.Orders (CustomerId, AddressId, OrderStatus, TotalAmount, Notes)
+VALUES
+(1, 1, N'Confirmed', 56600.00, N'Please call before delivery'),
+(2, 3, N'Pending', 25000.00, NULL),
+(1, 2, N'Delivered', 1600.00, NULL),
+(3, 4, N'Shipped', 10799.00, N'Deliver during business hours'),
+(4, 5, N'Cancelled', 599.00, N'Cancelled by customer'),
+(5, 6, N'Delivered', 3998.00, NULL);
+GO
+
+INSERT INTO dbo.OrderItems (OrderId, ProductId, Quantity, UnitPrice)
+VALUES
+(1, 1, 1, 55000.00),
+(1, 4, 2, 800.00),
+(2, 2, 1, 25000.00),
+(3, 4, 2, 800.00),
+(4, 3, 1, 9500.00),
+(4, 5, 1, 1200.00),
+(4, 7, 1, 99.00),
+(5, 7, 1, 599.00),
+(6, 8, 1, 2499.00),
+(6, 9, 1, 1499.00);
+GO
+
+INSERT INTO dbo.Payments
+(OrderId, Amount, PaymentMethod, PaymentStatus, TransactionReference)
+VALUES
+(1, 56600.00, N'UPI', N'Success', N'TXN-1001'),
+(2, 25000.00, N'Card', N'Pending', N'TXN-1002'),
+(3, 1600.00, N'UPI', N'Success', N'TXN-1003'),
+(4, 10799.00, N'NetBanking', N'Success', N'TXN-1004'),
+(5, 599.00, N'Card', N'Refunded', N'TXN-1005'),
+(6, 3998.00, N'CashOnDelivery', N'Pending', N'TXN-1006');
+GO
+
+INSERT INTO dbo.Reviews (CustomerId, ProductId, Rating, Comment)
+VALUES
+(1, 1, 5, N'Good laptop for office work'),
+(2, 2, 4, N'Good value for money'),
+(3, 4, 5, N'Works well and is easy to use'),
+(4, 7, 4, N'Comfortable fabric'),
+(5, 8, 5, N'Comfortable for daily running');
+GO
+
+-- Verify row counts
+SELECT N'Categories' AS TableName, COUNT(*) AS RowCounts FROM dbo.Categories
+UNION ALL SELECT N'Customers', COUNT(*) FROM dbo.Customers
+UNION ALL SELECT N'Addresses', COUNT(*) FROM dbo.Addresses
+UNION ALL SELECT N'Products', COUNT(*) FROM dbo.Products
+UNION ALL SELECT N'Orders', COUNT(*) FROM dbo.Orders
+UNION ALL SELECT N'OrderItems', COUNT(*) FROM dbo.OrderItems
+UNION ALL SELECT N'Payments', COUNT(*) FROM dbo.Payments
+UNION ALL SELECT N'Reviews', COUNT(*) FROM dbo.Reviews;
+GO
+
+-- Example query: orders with customer names and order items
+SELECT
+    o.OrderId,
+    CONCAT(c.FirstName, N' ', c.LastName) AS CustomerName,
+    o.OrderDate,
+    o.OrderStatus,
+    p.ProductName,
+    oi.Quantity,
+    oi.UnitPrice,
+    oi.Quantity * oi.UnitPrice AS LineTotal
+FROM dbo.Orders AS o
+JOIN dbo.Customers AS c ON c.CustomerId = o.CustomerId
+JOIN dbo.OrderItems AS oi ON oi.OrderId = o.OrderId
+JOIN dbo.Products AS p ON p.ProductId = oi.ProductId
+ORDER BY o.OrderId, p.ProductName;
+GO
