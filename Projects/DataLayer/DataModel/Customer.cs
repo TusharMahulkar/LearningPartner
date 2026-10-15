@@ -29,13 +29,4 @@ public partial class Customer
     public bool IsActive { get; set; }
 
     public int? CreatedBy { get; set; }
-
-    [InverseProperty("Customer")]
-    public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
-
-    [InverseProperty("Customer")]
-    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
-
-    [InverseProperty("Customer")]
-    public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 }

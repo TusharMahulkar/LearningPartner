@@ -30,11 +30,4 @@ public partial class Address
     public string Country { get; set; } = null!;
 
     public bool IsDefault { get; set; }
-
-    [ForeignKey("CustomerId")]
-    [InverseProperty("Addresses")]
-    public virtual Customer Customer { get; set; } = null!;
-
-    [InverseProperty("Address")]
-    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

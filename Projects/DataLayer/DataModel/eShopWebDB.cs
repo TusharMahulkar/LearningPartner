@@ -40,10 +40,6 @@ public partial class eShopWebDB : DbContext
         modelBuilder.Entity<Address>(entity =>
         {
             entity.Property(e => e.Country).HasDefaultValue("India");
-
-            entity.HasOne(d => d.Customer).WithMany(p => p.Addresses)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Addresses_Customers");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -62,22 +58,10 @@ public partial class eShopWebDB : DbContext
         {
             entity.Property(e => e.OrderDate).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.OrderStatus).HasDefaultValue("Pending");
-
-            entity.HasOne(d => d.Address).WithMany(p => p.Orders)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Orders_Addresses");
-
-            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Orders_Customers");
         });
 
         modelBuilder.Entity<OrderItem>(entity =>
         {
-            entity.HasOne(d => d.Order).WithMany(p => p.OrderItems)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_OrderItems_Orders");
-
             entity.HasOne(d => d.Product).WithMany(p => p.OrderItems)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_OrderItems_Products");
@@ -87,10 +71,6 @@ public partial class eShopWebDB : DbContext
         {
             entity.Property(e => e.PaymentDate).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.PaymentStatus).HasDefaultValue("Pending");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.Payments)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Payments_Orders");
         });
 
         modelBuilder.Entity<Product>(entity =>
@@ -106,10 +86,6 @@ public partial class eShopWebDB : DbContext
         modelBuilder.Entity<Review>(entity =>
         {
             entity.Property(e => e.ReviewDate).HasDefaultValueSql("(sysdatetime())");
-
-            entity.HasOne(d => d.Customer).WithMany(p => p.Reviews)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Reviews_Customers");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Reviews)
                 .OnDelete(DeleteBehavior.ClientSetNull)

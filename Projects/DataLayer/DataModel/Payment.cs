@@ -27,8 +27,4 @@ public partial class Payment
 
     [StringLength(100)]
     public string? TransactionReference { get; set; }
-
-    [ForeignKey("OrderId")]
-    [InverseProperty("Payments")]
-    public virtual Order Order { get; set; } = null!;
 }

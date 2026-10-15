@@ -24,10 +24,6 @@ public partial class Review
 
     public DateTime ReviewDate { get; set; }
 
-    [ForeignKey("CustomerId")]
-    [InverseProperty("Reviews")]
-    public virtual Customer Customer { get; set; } = null!;
-
     [ForeignKey("ProductId")]
     [InverseProperty("Reviews")]
     public virtual Product Product { get; set; } = null!;

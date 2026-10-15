@@ -26,18 +26,4 @@ public partial class Order
 
     [StringLength(500)]
     public string? Notes { get; set; }
-
-    [ForeignKey("AddressId")]
-    [InverseProperty("Orders")]
-    public virtual Address Address { get; set; } = null!;
-
-    [ForeignKey("CustomerId")]
-    [InverseProperty("Orders")]
-    public virtual Customer Customer { get; set; } = null!;
-
-    [InverseProperty("Order")]
-    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-
-    [InverseProperty("Order")]
-    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

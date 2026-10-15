@@ -1,3 +1,6 @@
+using DataLayer.DataModel;
+using Microsoft.EntityFrameworkCore;
+
 namespace eWebApplication
 {
     public class Program
@@ -8,6 +11,14 @@ namespace eWebApplication
 
             // Add services to the container.
             builder.Services.AddControllers();
+
+            builder.Services.AddDbContext<eShopWebDB>(options => 
+                options.UseSqlServer()
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+            );
+
+
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
