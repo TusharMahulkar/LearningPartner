@@ -1,4 +1,7 @@
 ﻿using DataLayer.DataModel;
+using eShopWebApplication.Models;
+using eShopWebApplication.Services;
+using eShopWebApplication.Services.IServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace eShopWebApplication.Controllers
@@ -7,42 +10,33 @@ namespace eShopWebApplication.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
+        private ICustomerService _customerService;
 
-        private eShopWebDB _dbContext;
-
-         
-        public CustomerController(eShopWebDB dbContext)
+        public CustomerController(ICustomerService CustomerService)
         {
-            _dbContext = dbContext;
+            _customerService = CustomerService;
         }
-
-
 
         [HttpGet("all")]
         public List<Customer> GetAllCustomer()
         {
-            var allcustomers =  _dbContext.Customers.ToList();
-            return allcustomers;
+            var data = _customerService.GetAllCustomers();
+            return data;
         }
-
 
 
         [HttpGet("id")]
         public Customer GetCustomerById(int id)
-        {            
-            var customer =  _dbContext.Customers.FirstOrDefault(a=>a.CustomerId == id);
+        {
+            var customer = _customerService.GetById(id);             
             return customer;
         }
 
-
-
         [HttpPost("create")]
-        public void CreateCustomer(Customer model)
+        public void CreateCustomer(CustomerModel model)
         {
-            _dbContext.Customers.Add(model);
-            var result = _dbContext.SaveChanges();
+            _customerService.CreateCustomer(model);             
         }
-
 
     }
 }

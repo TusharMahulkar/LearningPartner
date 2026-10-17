@@ -1,4 +1,6 @@
 using DataLayer.DataModel;
+using eShopWebApplication.Services;
+using eShopWebApplication.Services.IServiceInterface;
 using Microsoft.EntityFrameworkCore;
 
 namespace eWebApplication
@@ -17,6 +19,7 @@ namespace eWebApplication
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             );
 
+            builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 
             builder.Services.AddEndpointsApiExplorer();
