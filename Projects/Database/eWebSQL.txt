@@ -1,281 +1,462 @@
-/*
-    eShopWebDB - Entity Framework Core teaching database
-    SQL Server / SSMS
-    Includes schema, relationships, indexes, and sample data.
-
-    Warning: This script drops and recreates eShopWebDB if it already exists.
-    Remove the DROP DATABASE section if you need to preserve an existing database.
-*/
-USE master;
+USE [master]
 GO
+/****** Object:  Database [eShopWebDB]    Script Date: 10/17/2026 10:38:56 AM ******/
+CREATE DATABASE [eShopWebDB]
 
- 
-
-CREATE DATABASE eShopWebDB;
+USE [eShopWebDB]
 GO
-
-USE eShopWebDB;
+/****** Object:  Table [dbo].[Addresses]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
 GO
-
--- 1. Categories: one category can contain many products
-CREATE TABLE dbo.Categories
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Addresses](
+	[AddressId] [int] IDENTITY(1,1) NOT NULL,
+	[CustomerId] [int] NOT NULL,
+	[AddressLine] [nvarchar](200) NOT NULL,
+	[City] [nvarchar](100) NOT NULL,
+	[State] [nvarchar](100) NOT NULL,
+	[PostalCode] [nvarchar](12) NOT NULL,
+	[Country] [nvarchar](100) NOT NULL,
+	[IsDefault] [bit] NOT NULL,
+ CONSTRAINT [PK_Addresses] PRIMARY KEY CLUSTERED 
 (
-    CategoryId   INT IDENTITY(1,1) CONSTRAINT PK_Categories PRIMARY KEY,
-    CategoryName NVARCHAR(100) NOT NULL,
-    Description  NVARCHAR(500) NULL,
-    IsActive     BIT NOT NULL CONSTRAINT DF_Categories_IsActive DEFAULT (1),
-    CreatedDate  DATETIME2 NOT NULL CONSTRAINT DF_Categories_CreatedDate DEFAULT (SYSDATETIME()),
-    CONSTRAINT UQ_Categories_CategoryName UNIQUE (CategoryName)
-);
+	[AddressId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- 2. Customers
-CREATE TABLE dbo.Customers
+/****** Object:  Table [dbo].[Categories]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Categories](
+	[CategoryId] [int] IDENTITY(1,1) NOT NULL,
+	[CategoryName] [nvarchar](100) NOT NULL,
+	[Description] [nvarchar](500) NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedDate] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK_Categories] PRIMARY KEY CLUSTERED 
 (
-    CustomerId  INT IDENTITY(1,1) CONSTRAINT PK_Customers PRIMARY KEY,
-    FirstName   NVARCHAR(50) NOT NULL,
-    LastName    NVARCHAR(50) NOT NULL,
-    Email       NVARCHAR(150) NOT NULL,
-    Phone       NVARCHAR(20) NULL,
-    CreatedDate DATETIME2 NOT NULL CONSTRAINT DF_Customers_CreatedDate DEFAULT (SYSDATETIME()),
-    IsActive    BIT NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT (1),
-    CONSTRAINT UQ_Customers_Email UNIQUE (Email)
-);
+	[CategoryId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- 3. Addresses: one customer can save multiple addresses
-CREATE TABLE dbo.Addresses
+/****** Object:  Table [dbo].[Customers]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Customers](
+	[CustomerId] [int] IDENTITY(1,1) NOT NULL,
+	[FirstName] [nvarchar](50) NOT NULL,
+	[LastName] [nvarchar](50) NOT NULL,
+	[Email] [nvarchar](150) NOT NULL,
+	[Phone] [nvarchar](20) NULL,
+	[CreatedDate] [datetime2](7) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedBy] [int] NULL,
+ CONSTRAINT [PK_Customers] PRIMARY KEY CLUSTERED 
 (
-    AddressId   INT IDENTITY(1,1) CONSTRAINT PK_Addresses PRIMARY KEY,
-    CustomerId  INT NOT NULL,
-    AddressLine NVARCHAR(200) NOT NULL,
-    City        NVARCHAR(100) NOT NULL,
-    State       NVARCHAR(100) NOT NULL,
-    PostalCode  NVARCHAR(12) NOT NULL,
-    Country     NVARCHAR(100) NOT NULL CONSTRAINT DF_Addresses_Country DEFAULT (N'India'),
-    IsDefault   BIT NOT NULL CONSTRAINT DF_Addresses_IsDefault DEFAULT (0),
-    CONSTRAINT FK_Addresses_Customers FOREIGN KEY (CustomerId)
-        REFERENCES dbo.Customers(CustomerId)
-);
+	[CustomerId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- 4. Products: each product belongs to one category
-CREATE TABLE dbo.Products
+/****** Object:  Table [dbo].[OrderItems]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[OrderItems](
+	[OrderItemId] [int] IDENTITY(1,1) NOT NULL,
+	[OrderId] [int] NOT NULL,
+	[ProductId] [int] NOT NULL,
+	[Quantity] [int] NOT NULL,
+	[UnitPrice] [decimal](12, 2) NOT NULL,
+ CONSTRAINT [PK_OrderItems] PRIMARY KEY CLUSTERED 
 (
-    ProductId     INT IDENTITY(1,1) CONSTRAINT PK_Products PRIMARY KEY,
-    CategoryId    INT NOT NULL,
-    ProductName   NVARCHAR(150) NOT NULL,
-    Description   NVARCHAR(1000) NULL,
-    SKU           NVARCHAR(50) NOT NULL,
-    Price         DECIMAL(12,2) NOT NULL,
-    StockQuantity INT NOT NULL CONSTRAINT DF_Products_StockQuantity DEFAULT (0),
-    IsActive      BIT NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT (1),
-    CreatedDate   DATETIME2 NOT NULL CONSTRAINT DF_Products_CreatedDate DEFAULT (SYSDATETIME()),
-    CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryId)
-        REFERENCES dbo.Categories(CategoryId),
-    CONSTRAINT UQ_Products_SKU UNIQUE (SKU),
-    CONSTRAINT CK_Products_Price CHECK (Price >= 0),
-    CONSTRAINT CK_Products_StockQuantity CHECK (StockQuantity >= 0)
-);
+	[OrderItemId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- 5. Orders: a customer can place multiple orders
-CREATE TABLE dbo.Orders
+/****** Object:  Table [dbo].[Orders]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Orders](
+	[OrderId] [int] IDENTITY(1,1) NOT NULL,
+	[CustomerId] [int] NOT NULL,
+	[AddressId] [int] NOT NULL,
+	[OrderDate] [datetime2](7) NOT NULL,
+	[OrderStatus] [nvarchar](20) NOT NULL,
+	[TotalAmount] [decimal](12, 2) NOT NULL,
+	[Notes] [nvarchar](500) NULL,
+ CONSTRAINT [PK_Orders] PRIMARY KEY CLUSTERED 
 (
-    OrderId     INT IDENTITY(1,1) CONSTRAINT PK_Orders PRIMARY KEY,
-    CustomerId  INT NOT NULL,
-    AddressId   INT NOT NULL,
-    OrderDate   DATETIME2 NOT NULL CONSTRAINT DF_Orders_OrderDate DEFAULT (SYSDATETIME()),
-    OrderStatus NVARCHAR(20) NOT NULL CONSTRAINT DF_Orders_OrderStatus DEFAULT (N'Pending'),
-    TotalAmount DECIMAL(12,2) NOT NULL CONSTRAINT DF_Orders_TotalAmount DEFAULT (0),
-    Notes       NVARCHAR(500) NULL,
-    CONSTRAINT FK_Orders_Customers FOREIGN KEY (CustomerId)
-        REFERENCES dbo.Customers(CustomerId),
-    CONSTRAINT FK_Orders_Addresses FOREIGN KEY (AddressId)
-        REFERENCES dbo.Addresses(AddressId),
-    CONSTRAINT CK_Orders_TotalAmount CHECK (TotalAmount >= 0),
-    CONSTRAINT CK_Orders_OrderStatus CHECK
-        (OrderStatus IN (N'Pending', N'Confirmed', N'Shipped', N'Delivered', N'Cancelled'))
-);
+	[OrderId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- 6. OrderItems: bridge between Orders and Products
-CREATE TABLE dbo.OrderItems
+/****** Object:  Table [dbo].[Payments]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Payments](
+	[PaymentId] [int] IDENTITY(1,1) NOT NULL,
+	[OrderId] [int] NOT NULL,
+	[PaymentDate] [datetime2](7) NOT NULL,
+	[Amount] [decimal](12, 2) NOT NULL,
+	[PaymentMethod] [nvarchar](30) NOT NULL,
+	[PaymentStatus] [nvarchar](20) NOT NULL,
+	[TransactionReference] [nvarchar](100) NULL,
+ CONSTRAINT [PK_Payments] PRIMARY KEY CLUSTERED 
 (
-    OrderItemId INT IDENTITY(1,1) CONSTRAINT PK_OrderItems PRIMARY KEY,
-    OrderId     INT NOT NULL,
-    ProductId   INT NOT NULL,
-    Quantity    INT NOT NULL,
-    UnitPrice   DECIMAL(12,2) NOT NULL,
-    CONSTRAINT FK_OrderItems_Orders FOREIGN KEY (OrderId)
-        REFERENCES dbo.Orders(OrderId),
-    CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductId)
-        REFERENCES dbo.Products(ProductId),
-    CONSTRAINT CK_OrderItems_Quantity CHECK (Quantity > 0),
-    CONSTRAINT CK_OrderItems_UnitPrice CHECK (UnitPrice >= 0),
-    CONSTRAINT UQ_OrderItems_Order_Product UNIQUE (OrderId, ProductId)
-);
+	[PaymentId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- 7. Payments: an order can have multiple payment attempts/records
-CREATE TABLE dbo.Payments
+/****** Object:  Table [dbo].[Products]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Products](
+	[ProductId] [int] IDENTITY(1,1) NOT NULL,
+	[CategoryId] [int] NOT NULL,
+	[ProductName] [nvarchar](150) NOT NULL,
+	[Description] [nvarchar](1000) NULL,
+	[SKU] [nvarchar](50) NOT NULL,
+	[Price] [decimal](12, 2) NOT NULL,
+	[StockQuantity] [int] NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedDate] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK_Products] PRIMARY KEY CLUSTERED 
 (
-    PaymentId           INT IDENTITY(1,1) CONSTRAINT PK_Payments PRIMARY KEY,
-    OrderId             INT NOT NULL,
-    PaymentDate         DATETIME2 NOT NULL CONSTRAINT DF_Payments_PaymentDate DEFAULT (SYSDATETIME()),
-    Amount              DECIMAL(12,2) NOT NULL,
-    PaymentMethod       NVARCHAR(30) NOT NULL,
-    PaymentStatus       NVARCHAR(20) NOT NULL CONSTRAINT DF_Payments_PaymentStatus DEFAULT (N'Pending'),
-    TransactionReference NVARCHAR(100) NULL,
-    CONSTRAINT FK_Payments_Orders FOREIGN KEY (OrderId)
-        REFERENCES dbo.Orders(OrderId),
-    CONSTRAINT CK_Payments_Amount CHECK (Amount > 0),
-    CONSTRAINT CK_Payments_Method CHECK
-        (PaymentMethod IN (N'UPI', N'Card', N'NetBanking', N'CashOnDelivery', N'Wallet')),
-    CONSTRAINT CK_Payments_Status CHECK
-        (PaymentStatus IN (N'Pending', N'Success', N'Failed', N'Refunded'))
-);
+	[ProductId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- 8. Reviews: customers review products
-CREATE TABLE dbo.Reviews
+/****** Object:  Table [dbo].[Reviews]    Script Date: 10/17/2026 10:38:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Reviews](
+	[ReviewId] [int] IDENTITY(1,1) NOT NULL,
+	[CustomerId] [int] NOT NULL,
+	[ProductId] [int] NOT NULL,
+	[Rating] [int] NOT NULL,
+	[Comment] [nvarchar](1000) NULL,
+	[ReviewDate] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK_Reviews] PRIMARY KEY CLUSTERED 
 (
-    ReviewId   INT IDENTITY(1,1) CONSTRAINT PK_Reviews PRIMARY KEY,
-    CustomerId INT NOT NULL,
-    ProductId  INT NOT NULL,
-    Rating     INT NOT NULL,
-    Comment    NVARCHAR(1000) NULL,
-    ReviewDate DATETIME2 NOT NULL CONSTRAINT DF_Reviews_ReviewDate DEFAULT (SYSDATETIME()),
-    CONSTRAINT FK_Reviews_Customers FOREIGN KEY (CustomerId)
-        REFERENCES dbo.Customers(CustomerId),
-    CONSTRAINT FK_Reviews_Products FOREIGN KEY (ProductId)
-        REFERENCES dbo.Products(ProductId),
-    CONSTRAINT CK_Reviews_Rating CHECK (Rating BETWEEN 1 AND 5),
-    CONSTRAINT UQ_Reviews_Customer_Product UNIQUE (CustomerId, ProductId)
-);
+	[ReviewId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-
--- Helpful indexes for common joins and filters
-CREATE INDEX IX_Addresses_CustomerId ON dbo.Addresses(CustomerId);
-CREATE INDEX IX_Products_CategoryId ON dbo.Products(CategoryId);
-CREATE INDEX IX_Orders_CustomerId_OrderDate ON dbo.Orders(CustomerId, OrderDate);
-CREATE INDEX IX_OrderItems_ProductId ON dbo.OrderItems(ProductId);
-CREATE INDEX IX_Payments_OrderId ON dbo.Payments(OrderId);
-CREATE INDEX IX_Reviews_ProductId ON dbo.Reviews(ProductId);
+SET IDENTITY_INSERT [dbo].[Addresses] ON 
 GO
-
--- Sample data
-INSERT INTO dbo.Categories (CategoryName, Description)
-VALUES
-(N'Electronics', N'Computers, phones, and electronic devices'),
-(N'Accessories', N'Computer and mobile accessories'),
-(N'Clothing', N'Clothing and fashion'),
-(N'Home & Kitchen', N'Products for home and kitchen');
+INSERT [dbo].[Addresses] ([AddressId], [CustomerId], [AddressLine], [City], [State], [PostalCode], [Country], [IsDefault]) VALUES (1, 1, N'12 MG Road', N'Pune', N'Maharashtra', N'411001', N'India', 1)
 GO
-
-INSERT INTO dbo.Customers (FirstName, LastName, Email, Phone)
-VALUES
-(N'Rahul', N'Sharma', N'rahul.sharma@example.com', N'9876543210'),
-(N'Priya', N'Patil', N'priya.patil@example.com', N'9876543211'),
-(N'Amit', N'Joshi', N'amit.joshi@example.com', N'9876543212'),
-(N'Neha', N'Deshmukh', N'neha.deshmukh@example.com', N'9876543213'),
-(N'Vikram', N'Kulkarni', N'vikram.kulkarni@example.com', N'9876543214');
+INSERT [dbo].[Addresses] ([AddressId], [CustomerId], [AddressLine], [City], [State], [PostalCode], [Country], [IsDefault]) VALUES (2, 1, N'Flat 4, Green Park', N'Pune', N'Maharashtra', N'411045', N'India', 0)
 GO
-
-INSERT INTO dbo.Addresses (CustomerId, AddressLine, City, State, PostalCode, IsDefault)
-VALUES
-(1, N'12 MG Road', N'Pune', N'Maharashtra', N'411001', 1),
-(1, N'Flat 4, Green Park', N'Pune', N'Maharashtra', N'411045', 0),
-(2, N'25 FC Road', N'Pune', N'Maharashtra', N'411004', 1),
-(3, N'18 Dharampeth', N'Nagpur', N'Maharashtra', N'440010', 1),
-(4, N'7 College Road', N'Nashik', N'Maharashtra', N'422005', 1),
-(5, N'44 Civil Lines', N'Nagpur', N'Maharashtra', N'440001', 1);
+INSERT [dbo].[Addresses] ([AddressId], [CustomerId], [AddressLine], [City], [State], [PostalCode], [Country], [IsDefault]) VALUES (3, 2, N'25 FC Road', N'Pune', N'Maharashtra', N'411004', N'India', 1)
 GO
-
-INSERT INTO dbo.Products
-(CategoryId, ProductName, Description, SKU, Price, StockQuantity)
-VALUES
-(1, N'Business Laptop', N'14-inch laptop for everyday work', N'EL-LAP-001', 55000.00, 10),
-(1, N'Android Smartphone', N'128 GB smartphone', N'EL-MOB-001', 25000.00, 25),
-(1, N'LED Monitor', N'24-inch Full HD monitor', N'EL-MON-001', 9500.00, 12),
-(2, N'Wireless Mouse', N'Wireless optical mouse', N'AC-MOU-001', 800.00, 50),
-(2, N'USB Keyboard', N'Full-size USB keyboard', N'AC-KEY-001', 1200.00, 35),
-(2, N'USB-C Hub', N'6-in-1 USB-C hub', N'AC-HUB-001', 2200.00, 20),
-(3, N'Cotton T-Shirt', N'Everyday cotton T-shirt', N'CL-TSH-001', 599.00, 100),
-(3, N'Running Shoes', N'Lightweight running shoes', N'CL-SHO-001', 2499.00, 30),
-(4, N'Electric Kettle', N'1.5-litre electric kettle', N'HK-KET-001', 1499.00, 18),
-(4, N'Mixer Grinder', N'Kitchen mixer grinder', N'HK-MIX-001', 3299.00, 8);
+INSERT [dbo].[Addresses] ([AddressId], [CustomerId], [AddressLine], [City], [State], [PostalCode], [Country], [IsDefault]) VALUES (4, 3, N'18 Dharampeth', N'Nagpur', N'Maharashtra', N'440010', N'India', 1)
 GO
-
--- Orders reference addresses owned by the same customer in this sample data.
-INSERT INTO dbo.Orders (CustomerId, AddressId, OrderStatus, TotalAmount, Notes)
-VALUES
-(1, 1, N'Confirmed', 56600.00, N'Please call before delivery'),
-(2, 3, N'Pending', 25000.00, NULL),
-(1, 2, N'Delivered', 1600.00, NULL),
-(3, 4, N'Shipped', 10799.00, N'Deliver during business hours'),
-(4, 5, N'Cancelled', 599.00, N'Cancelled by customer'),
-(5, 6, N'Delivered', 3998.00, NULL);
+INSERT [dbo].[Addresses] ([AddressId], [CustomerId], [AddressLine], [City], [State], [PostalCode], [Country], [IsDefault]) VALUES (5, 4, N'7 College Road', N'Nashik', N'Maharashtra', N'422005', N'India', 1)
 GO
-
-INSERT INTO dbo.OrderItems (OrderId, ProductId, Quantity, UnitPrice)
-VALUES
-(1, 1, 1, 55000.00),
-(1, 4, 2, 800.00),
-(2, 2, 1, 25000.00),
-(3, 4, 2, 800.00),
-(4, 3, 1, 9500.00),
-(4, 5, 1, 1200.00),
-(4, 7, 1, 99.00),
-(5, 7, 1, 599.00),
-(6, 8, 1, 2499.00),
-(6, 9, 1, 1499.00);
+INSERT [dbo].[Addresses] ([AddressId], [CustomerId], [AddressLine], [City], [State], [PostalCode], [Country], [IsDefault]) VALUES (6, 5, N'44 Civil Lines', N'Nagpur', N'Maharashtra', N'440001', N'India', 1)
 GO
-
-INSERT INTO dbo.Payments
-(OrderId, Amount, PaymentMethod, PaymentStatus, TransactionReference)
-VALUES
-(1, 56600.00, N'UPI', N'Success', N'TXN-1001'),
-(2, 25000.00, N'Card', N'Pending', N'TXN-1002'),
-(3, 1600.00, N'UPI', N'Success', N'TXN-1003'),
-(4, 10799.00, N'NetBanking', N'Success', N'TXN-1004'),
-(5, 599.00, N'Card', N'Refunded', N'TXN-1005'),
-(6, 3998.00, N'CashOnDelivery', N'Pending', N'TXN-1006');
+SET IDENTITY_INSERT [dbo].[Addresses] OFF
 GO
-
-INSERT INTO dbo.Reviews (CustomerId, ProductId, Rating, Comment)
-VALUES
-(1, 1, 5, N'Good laptop for office work'),
-(2, 2, 4, N'Good value for money'),
-(3, 4, 5, N'Works well and is easy to use'),
-(4, 7, 4, N'Comfortable fabric'),
-(5, 8, 5, N'Comfortable for daily running');
+SET IDENTITY_INSERT [dbo].[Categories] ON 
 GO
-
--- Verify row counts
-SELECT N'Categories' AS TableName, COUNT(*) AS RowCounts FROM dbo.Categories
-UNION ALL SELECT N'Customers', COUNT(*) FROM dbo.Customers
-UNION ALL SELECT N'Addresses', COUNT(*) FROM dbo.Addresses
-UNION ALL SELECT N'Products', COUNT(*) FROM dbo.Products
-UNION ALL SELECT N'Orders', COUNT(*) FROM dbo.Orders
-UNION ALL SELECT N'OrderItems', COUNT(*) FROM dbo.OrderItems
-UNION ALL SELECT N'Payments', COUNT(*) FROM dbo.Payments
-UNION ALL SELECT N'Reviews', COUNT(*) FROM dbo.Reviews;
+INSERT [dbo].[Categories] ([CategoryId], [CategoryName], [Description], [IsActive], [CreatedDate]) VALUES (1, N'Electronics', N'Computers, phones, and electronic devices', 1, CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2))
 GO
-
--- Example query: orders with customer names and order items
-SELECT
-    o.OrderId,
-    CONCAT(c.FirstName, N' ', c.LastName) AS CustomerName,
-    o.OrderDate,
-    o.OrderStatus,
-    p.ProductName,
-    oi.Quantity,
-    oi.UnitPrice,
-    oi.Quantity * oi.UnitPrice AS LineTotal
-FROM dbo.Orders AS o
-JOIN dbo.Customers AS c ON c.CustomerId = o.CustomerId
-JOIN dbo.OrderItems AS oi ON oi.OrderId = o.OrderId
-JOIN dbo.Products AS p ON p.ProductId = oi.ProductId
-ORDER BY o.OrderId, p.ProductName;
+INSERT [dbo].[Categories] ([CategoryId], [CategoryName], [Description], [IsActive], [CreatedDate]) VALUES (2, N'Accessories', N'Computer and mobile accessories', 1, CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2))
+GO
+INSERT [dbo].[Categories] ([CategoryId], [CategoryName], [Description], [IsActive], [CreatedDate]) VALUES (3, N'Clothing', N'Clothing and fashion', 1, CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2))
+GO
+INSERT [dbo].[Categories] ([CategoryId], [CategoryName], [Description], [IsActive], [CreatedDate]) VALUES (4, N'Home & Kitchen', N'Products for home and kitchen', 1, CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2))
+GO
+SET IDENTITY_INSERT [dbo].[Categories] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Customers] ON 
+GO
+INSERT [dbo].[Customers] ([CustomerId], [FirstName], [LastName], [Email], [Phone], [CreatedDate], [IsActive], [CreatedBy]) VALUES (1, N'Rahul', N'Sharma', N'rahul.sharma@example.com', N'9876543210', CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2), 1, NULL)
+GO
+INSERT [dbo].[Customers] ([CustomerId], [FirstName], [LastName], [Email], [Phone], [CreatedDate], [IsActive], [CreatedBy]) VALUES (2, N'Priya', N'Patil', N'priya.patil@example.com', N'9876543211', CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2), 1, NULL)
+GO
+INSERT [dbo].[Customers] ([CustomerId], [FirstName], [LastName], [Email], [Phone], [CreatedDate], [IsActive], [CreatedBy]) VALUES (3, N'Amit', N'Joshi', N'amit.joshi@example.com', N'9876543212', CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2), 1, NULL)
+GO
+INSERT [dbo].[Customers] ([CustomerId], [FirstName], [LastName], [Email], [Phone], [CreatedDate], [IsActive], [CreatedBy]) VALUES (4, N'Neha', N'Deshmukh', N'neha.deshmukh@example.com', N'9876543213', CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2), 1, NULL)
+GO
+INSERT [dbo].[Customers] ([CustomerId], [FirstName], [LastName], [Email], [Phone], [CreatedDate], [IsActive], [CreatedBy]) VALUES (5, N'Vikram', N'Kulkarni', N'vikram.kulkarni@example.com', N'9876543214', CAST(N'2026-10-12T22:06:10.3192733' AS DateTime2), 1, NULL)
+GO
+INSERT [dbo].[Customers] ([CustomerId], [FirstName], [LastName], [Email], [Phone], [CreatedDate], [IsActive], [CreatedBy]) VALUES (6, N'TEST', N'TEST', N'test@test.com', N'98745623', CAST(N'2026-10-15T15:44:51.5080000' AS DateTime2), 1, 0)
+GO
+INSERT [dbo].[Customers] ([CustomerId], [FirstName], [LastName], [Email], [Phone], [CreatedDate], [IsActive], [CreatedBy]) VALUES (7, N'Tushar', N'Mahulkar', N'tushar.test@test.com', N'987456321', CAST(N'2026-10-17T08:25:12.7713145' AS DateTime2), 1, NULL)
+GO
+SET IDENTITY_INSERT [dbo].[Customers] OFF
+GO
+SET IDENTITY_INSERT [dbo].[OrderItems] ON 
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (1, 1, 1, 1, CAST(55000.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (2, 1, 4, 2, CAST(800.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (3, 2, 2, 1, CAST(25000.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (4, 3, 4, 2, CAST(800.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (5, 4, 3, 1, CAST(9500.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (6, 4, 5, 1, CAST(1200.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (7, 4, 7, 1, CAST(99.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (8, 5, 7, 1, CAST(599.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (9, 6, 8, 1, CAST(2499.00 AS Decimal(12, 2)))
+GO
+INSERT [dbo].[OrderItems] ([OrderItemId], [OrderId], [ProductId], [Quantity], [UnitPrice]) VALUES (10, 6, 9, 1, CAST(1499.00 AS Decimal(12, 2)))
+GO
+SET IDENTITY_INSERT [dbo].[OrderItems] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Orders] ON 
+GO
+INSERT [dbo].[Orders] ([OrderId], [CustomerId], [AddressId], [OrderDate], [OrderStatus], [TotalAmount], [Notes]) VALUES (1, 1, 1, CAST(N'2026-10-12T22:06:10.3669821' AS DateTime2), N'Confirmed', CAST(56600.00 AS Decimal(12, 2)), N'Please call before delivery')
+GO
+INSERT [dbo].[Orders] ([OrderId], [CustomerId], [AddressId], [OrderDate], [OrderStatus], [TotalAmount], [Notes]) VALUES (2, 2, 3, CAST(N'2026-10-12T22:06:10.3669821' AS DateTime2), N'Pending', CAST(25000.00 AS Decimal(12, 2)), NULL)
+GO
+INSERT [dbo].[Orders] ([OrderId], [CustomerId], [AddressId], [OrderDate], [OrderStatus], [TotalAmount], [Notes]) VALUES (3, 1, 2, CAST(N'2026-10-12T22:06:10.3669821' AS DateTime2), N'Delivered', CAST(1600.00 AS Decimal(12, 2)), NULL)
+GO
+INSERT [dbo].[Orders] ([OrderId], [CustomerId], [AddressId], [OrderDate], [OrderStatus], [TotalAmount], [Notes]) VALUES (4, 3, 4, CAST(N'2026-10-12T22:06:10.3669821' AS DateTime2), N'Shipped', CAST(10799.00 AS Decimal(12, 2)), N'Deliver during business hours')
+GO
+INSERT [dbo].[Orders] ([OrderId], [CustomerId], [AddressId], [OrderDate], [OrderStatus], [TotalAmount], [Notes]) VALUES (5, 4, 5, CAST(N'2026-10-12T22:06:10.3669821' AS DateTime2), N'Cancelled', CAST(599.00 AS Decimal(12, 2)), N'Cancelled by customer')
+GO
+INSERT [dbo].[Orders] ([OrderId], [CustomerId], [AddressId], [OrderDate], [OrderStatus], [TotalAmount], [Notes]) VALUES (6, 5, 6, CAST(N'2026-10-12T22:06:10.3669821' AS DateTime2), N'Delivered', CAST(3998.00 AS Decimal(12, 2)), NULL)
+GO
+SET IDENTITY_INSERT [dbo].[Orders] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Payments] ON 
+GO
+INSERT [dbo].[Payments] ([PaymentId], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [PaymentStatus], [TransactionReference]) VALUES (1, 1, CAST(N'2026-10-12T22:06:10.3827380' AS DateTime2), CAST(56600.00 AS Decimal(12, 2)), N'UPI', N'Success', N'TXN-1001')
+GO
+INSERT [dbo].[Payments] ([PaymentId], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [PaymentStatus], [TransactionReference]) VALUES (2, 2, CAST(N'2026-10-12T22:06:10.3827380' AS DateTime2), CAST(25000.00 AS Decimal(12, 2)), N'Card', N'Pending', N'TXN-1002')
+GO
+INSERT [dbo].[Payments] ([PaymentId], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [PaymentStatus], [TransactionReference]) VALUES (3, 3, CAST(N'2026-10-12T22:06:10.3827380' AS DateTime2), CAST(1600.00 AS Decimal(12, 2)), N'UPI', N'Success', N'TXN-1003')
+GO
+INSERT [dbo].[Payments] ([PaymentId], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [PaymentStatus], [TransactionReference]) VALUES (4, 4, CAST(N'2026-10-12T22:06:10.3827380' AS DateTime2), CAST(10799.00 AS Decimal(12, 2)), N'NetBanking', N'Success', N'TXN-1004')
+GO
+INSERT [dbo].[Payments] ([PaymentId], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [PaymentStatus], [TransactionReference]) VALUES (5, 5, CAST(N'2026-10-12T22:06:10.3827380' AS DateTime2), CAST(599.00 AS Decimal(12, 2)), N'Card', N'Refunded', N'TXN-1005')
+GO
+INSERT [dbo].[Payments] ([PaymentId], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [PaymentStatus], [TransactionReference]) VALUES (6, 6, CAST(N'2026-10-12T22:06:10.3827380' AS DateTime2), CAST(3998.00 AS Decimal(12, 2)), N'CashOnDelivery', N'Pending', N'TXN-1006')
+GO
+SET IDENTITY_INSERT [dbo].[Payments] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Products] ON 
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (1, 1, N'Business Laptop', N'14-inch laptop for everyday work', N'EL-LAP-001', CAST(55000.00 AS Decimal(12, 2)), 10, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (2, 1, N'Android Smartphone', N'128 GB smartphone', N'EL-MOB-001', CAST(25000.00 AS Decimal(12, 2)), 25, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (3, 1, N'LED Monitor', N'24-inch Full HD monitor', N'EL-MON-001', CAST(9500.00 AS Decimal(12, 2)), 12, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (4, 2, N'Wireless Mouse', N'Wireless optical mouse', N'AC-MOU-001', CAST(800.00 AS Decimal(12, 2)), 50, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (5, 2, N'USB Keyboard', N'Full-size USB keyboard', N'AC-KEY-001', CAST(1200.00 AS Decimal(12, 2)), 35, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (6, 2, N'USB-C Hub', N'6-in-1 USB-C hub', N'AC-HUB-001', CAST(2200.00 AS Decimal(12, 2)), 20, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (7, 3, N'Cotton T-Shirt', N'Everyday cotton T-shirt', N'CL-TSH-001', CAST(599.00 AS Decimal(12, 2)), 100, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (8, 3, N'Running Shoes', N'Lightweight running shoes', N'CL-SHO-001', CAST(2499.00 AS Decimal(12, 2)), 30, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (9, 4, N'Electric Kettle', N'1.5-litre electric kettle', N'HK-KET-001', CAST(1499.00 AS Decimal(12, 2)), 18, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+INSERT [dbo].[Products] ([ProductId], [CategoryId], [ProductName], [Description], [SKU], [Price], [StockQuantity], [IsActive], [CreatedDate]) VALUES (10, 4, N'Mixer Grinder', N'Kitchen mixer grinder', N'HK-MIX-001', CAST(3299.00 AS Decimal(12, 2)), 8, 1, CAST(N'2026-10-12T22:06:10.3508934' AS DateTime2))
+GO
+SET IDENTITY_INSERT [dbo].[Products] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Reviews] ON 
+GO
+INSERT [dbo].[Reviews] ([ReviewId], [CustomerId], [ProductId], [Rating], [Comment], [ReviewDate]) VALUES (1, 1, 1, 5, N'Good laptop for office work', CAST(N'2026-10-12T22:06:10.3990624' AS DateTime2))
+GO
+INSERT [dbo].[Reviews] ([ReviewId], [CustomerId], [ProductId], [Rating], [Comment], [ReviewDate]) VALUES (2, 2, 2, 4, N'Good value for money', CAST(N'2026-10-12T22:06:10.3990624' AS DateTime2))
+GO
+INSERT [dbo].[Reviews] ([ReviewId], [CustomerId], [ProductId], [Rating], [Comment], [ReviewDate]) VALUES (3, 3, 4, 5, N'Works well and is easy to use', CAST(N'2026-10-12T22:06:10.3990624' AS DateTime2))
+GO
+INSERT [dbo].[Reviews] ([ReviewId], [CustomerId], [ProductId], [Rating], [Comment], [ReviewDate]) VALUES (4, 4, 7, 4, N'Comfortable fabric', CAST(N'2026-10-12T22:06:10.3990624' AS DateTime2))
+GO
+INSERT [dbo].[Reviews] ([ReviewId], [CustomerId], [ProductId], [Rating], [Comment], [ReviewDate]) VALUES (5, 5, 8, 5, N'Comfortable for daily running', CAST(N'2026-10-12T22:06:10.3990624' AS DateTime2))
+GO
+SET IDENTITY_INSERT [dbo].[Reviews] OFF
+GO
+/****** Object:  Index [IX_Addresses_CustomerId]    Script Date: 10/17/2026 10:38:56 AM ******/
+CREATE NONCLUSTERED INDEX [IX_Addresses_CustomerId] ON [dbo].[Addresses]
+(
+	[CustomerId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ_Categories_CategoryName]    Script Date: 10/17/2026 10:38:56 AM ******/
+ALTER TABLE [dbo].[Categories] ADD  CONSTRAINT [UQ_Categories_CategoryName] UNIQUE NONCLUSTERED 
+(
+	[CategoryName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ_Customers_Email]    Script Date: 10/17/2026 10:38:56 AM ******/
+ALTER TABLE [dbo].[Customers] ADD  CONSTRAINT [UQ_Customers_Email] UNIQUE NONCLUSTERED 
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [UQ_OrderItems_Order_Product]    Script Date: 10/17/2026 10:38:56 AM ******/
+ALTER TABLE [dbo].[OrderItems] ADD  CONSTRAINT [UQ_OrderItems_Order_Product] UNIQUE NONCLUSTERED 
+(
+	[OrderId] ASC,
+	[ProductId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_OrderItems_ProductId]    Script Date: 10/17/2026 10:38:56 AM ******/
+CREATE NONCLUSTERED INDEX [IX_OrderItems_ProductId] ON [dbo].[OrderItems]
+(
+	[ProductId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_Orders_CustomerId_OrderDate]    Script Date: 10/17/2026 10:38:56 AM ******/
+CREATE NONCLUSTERED INDEX [IX_Orders_CustomerId_OrderDate] ON [dbo].[Orders]
+(
+	[CustomerId] ASC,
+	[OrderDate] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_Payments_OrderId]    Script Date: 10/17/2026 10:38:56 AM ******/
+CREATE NONCLUSTERED INDEX [IX_Payments_OrderId] ON [dbo].[Payments]
+(
+	[OrderId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ_Products_SKU]    Script Date: 10/17/2026 10:38:56 AM ******/
+ALTER TABLE [dbo].[Products] ADD  CONSTRAINT [UQ_Products_SKU] UNIQUE NONCLUSTERED 
+(
+	[SKU] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_Products_CategoryId]    Script Date: 10/17/2026 10:38:56 AM ******/
+CREATE NONCLUSTERED INDEX [IX_Products_CategoryId] ON [dbo].[Products]
+(
+	[CategoryId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [UQ_Reviews_Customer_Product]    Script Date: 10/17/2026 10:38:56 AM ******/
+ALTER TABLE [dbo].[Reviews] ADD  CONSTRAINT [UQ_Reviews_Customer_Product] UNIQUE NONCLUSTERED 
+(
+	[CustomerId] ASC,
+	[ProductId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_Reviews_ProductId]    Script Date: 10/17/2026 10:38:56 AM ******/
+CREATE NONCLUSTERED INDEX [IX_Reviews_ProductId] ON [dbo].[Reviews]
+(
+	[ProductId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Addresses] ADD  CONSTRAINT [DF_Addresses_Country]  DEFAULT (N'India') FOR [Country]
+GO
+ALTER TABLE [dbo].[Addresses] ADD  CONSTRAINT [DF_Addresses_IsDefault]  DEFAULT ((0)) FOR [IsDefault]
+GO
+ALTER TABLE [dbo].[Categories] ADD  CONSTRAINT [DF_Categories_IsActive]  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[Categories] ADD  CONSTRAINT [DF_Categories_CreatedDate]  DEFAULT (sysdatetime()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Customers] ADD  CONSTRAINT [DF_Customers_CreatedDate]  DEFAULT (sysdatetime()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Customers] ADD  CONSTRAINT [DF_Customers_IsActive]  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[Orders] ADD  CONSTRAINT [DF_Orders_OrderDate]  DEFAULT (sysdatetime()) FOR [OrderDate]
+GO
+ALTER TABLE [dbo].[Orders] ADD  CONSTRAINT [DF_Orders_OrderStatus]  DEFAULT (N'Pending') FOR [OrderStatus]
+GO
+ALTER TABLE [dbo].[Orders] ADD  CONSTRAINT [DF_Orders_TotalAmount]  DEFAULT ((0)) FOR [TotalAmount]
+GO
+ALTER TABLE [dbo].[Payments] ADD  CONSTRAINT [DF_Payments_PaymentDate]  DEFAULT (sysdatetime()) FOR [PaymentDate]
+GO
+ALTER TABLE [dbo].[Payments] ADD  CONSTRAINT [DF_Payments_PaymentStatus]  DEFAULT (N'Pending') FOR [PaymentStatus]
+GO
+ALTER TABLE [dbo].[Products] ADD  CONSTRAINT [DF_Products_StockQuantity]  DEFAULT ((0)) FOR [StockQuantity]
+GO
+ALTER TABLE [dbo].[Products] ADD  CONSTRAINT [DF_Products_IsActive]  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[Products] ADD  CONSTRAINT [DF_Products_CreatedDate]  DEFAULT (sysdatetime()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Reviews] ADD  CONSTRAINT [DF_Reviews_ReviewDate]  DEFAULT (sysdatetime()) FOR [ReviewDate]
+GO
+ALTER TABLE [dbo].[OrderItems]  WITH CHECK ADD  CONSTRAINT [FK_OrderItems_Products] FOREIGN KEY([ProductId])
+REFERENCES [dbo].[Products] ([ProductId])
+GO
+ALTER TABLE [dbo].[OrderItems] CHECK CONSTRAINT [FK_OrderItems_Products]
+GO
+ALTER TABLE [dbo].[Products]  WITH CHECK ADD  CONSTRAINT [FK_Products_Categories] FOREIGN KEY([CategoryId])
+REFERENCES [dbo].[Categories] ([CategoryId])
+GO
+ALTER TABLE [dbo].[Products] CHECK CONSTRAINT [FK_Products_Categories]
+GO
+ALTER TABLE [dbo].[Reviews]  WITH CHECK ADD  CONSTRAINT [FK_Reviews_Products] FOREIGN KEY([ProductId])
+REFERENCES [dbo].[Products] ([ProductId])
+GO
+ALTER TABLE [dbo].[Reviews] CHECK CONSTRAINT [FK_Reviews_Products]
+GO
+ALTER TABLE [dbo].[OrderItems]  WITH CHECK ADD  CONSTRAINT [CK_OrderItems_Quantity] CHECK  (([Quantity]>(0)))
+GO
+ALTER TABLE [dbo].[OrderItems] CHECK CONSTRAINT [CK_OrderItems_Quantity]
+GO
+ALTER TABLE [dbo].[OrderItems]  WITH CHECK ADD  CONSTRAINT [CK_OrderItems_UnitPrice] CHECK  (([UnitPrice]>=(0)))
+GO
+ALTER TABLE [dbo].[OrderItems] CHECK CONSTRAINT [CK_OrderItems_UnitPrice]
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD  CONSTRAINT [CK_Orders_OrderStatus] CHECK  (([OrderStatus]=N'Cancelled' OR [OrderStatus]=N'Delivered' OR [OrderStatus]=N'Shipped' OR [OrderStatus]=N'Confirmed' OR [OrderStatus]=N'Pending'))
+GO
+ALTER TABLE [dbo].[Orders] CHECK CONSTRAINT [CK_Orders_OrderStatus]
+GO
+ALTER TABLE [dbo].[Orders]  WITH CHECK ADD  CONSTRAINT [CK_Orders_TotalAmount] CHECK  (([TotalAmount]>=(0)))
+GO
+ALTER TABLE [dbo].[Orders] CHECK CONSTRAINT [CK_Orders_TotalAmount]
+GO
+ALTER TABLE [dbo].[Payments]  WITH CHECK ADD  CONSTRAINT [CK_Payments_Amount] CHECK  (([Amount]>(0)))
+GO
+ALTER TABLE [dbo].[Payments] CHECK CONSTRAINT [CK_Payments_Amount]
+GO
+ALTER TABLE [dbo].[Payments]  WITH CHECK ADD  CONSTRAINT [CK_Payments_Method] CHECK  (([PaymentMethod]=N'Wallet' OR [PaymentMethod]=N'CashOnDelivery' OR [PaymentMethod]=N'NetBanking' OR [PaymentMethod]=N'Card' OR [PaymentMethod]=N'UPI'))
+GO
+ALTER TABLE [dbo].[Payments] CHECK CONSTRAINT [CK_Payments_Method]
+GO
+ALTER TABLE [dbo].[Payments]  WITH CHECK ADD  CONSTRAINT [CK_Payments_Status] CHECK  (([PaymentStatus]=N'Refunded' OR [PaymentStatus]=N'Failed' OR [PaymentStatus]=N'Success' OR [PaymentStatus]=N'Pending'))
+GO
+ALTER TABLE [dbo].[Payments] CHECK CONSTRAINT [CK_Payments_Status]
+GO
+ALTER TABLE [dbo].[Products]  WITH CHECK ADD  CONSTRAINT [CK_Products_Price] CHECK  (([Price]>=(0)))
+GO
+ALTER TABLE [dbo].[Products] CHECK CONSTRAINT [CK_Products_Price]
+GO
+ALTER TABLE [dbo].[Products]  WITH CHECK ADD  CONSTRAINT [CK_Products_StockQuantity] CHECK  (([StockQuantity]>=(0)))
+GO
+ALTER TABLE [dbo].[Products] CHECK CONSTRAINT [CK_Products_StockQuantity]
+GO
+ALTER TABLE [dbo].[Reviews]  WITH CHECK ADD  CONSTRAINT [CK_Reviews_Rating] CHECK  (([Rating]>=(1) AND [Rating]<=(5)))
+GO
+ALTER TABLE [dbo].[Reviews] CHECK CONSTRAINT [CK_Reviews_Rating]
+GO
+USE [master]
+GO
+ALTER DATABASE [eShopWebDB] SET  READ_WRITE 
 GO

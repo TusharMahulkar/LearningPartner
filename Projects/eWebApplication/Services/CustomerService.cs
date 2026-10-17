@@ -13,7 +13,6 @@ namespace eShopWebApplication.Services
             _dbContext = dbContext;
         }
 
-
         public List<Customer> GetAllCustomers()
         {
             var customers = _dbContext.Customers.ToList();
