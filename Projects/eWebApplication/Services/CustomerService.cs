@@ -1,48 +1,57 @@
 ﻿using DataLayer.DataModel;
 using eShopWebApplication.Models;
 using eShopWebApplication.Services.IServiceInterface;
+using SQLDataLayer.Repository;
+using System.Reflection.Metadata.Ecma335;
 
 namespace eShopWebApplication.Services
 {
     public class CustomerService : ICustomerService
     {
-        private eShopWebDB _dbContext;
+        IRepository<Customer> _customerRepository;
 
-        public CustomerService(eShopWebDB dbContext)
+        public CustomerService(IRepository<Customer> customerRepository)
         {
-            _dbContext = dbContext;
+            _customerRepository = customerRepository;
         }
 
         public List<Customer> GetAllCustomers()
         {
-            var customers = _dbContext.Customers.ToList();
-            return customers;
-        }
-
-        public Customer GetById(int id)
-        {
-            var customers = _dbContext.Customers.FirstOrDefault(a => a.CustomerId == id);
-            return customers;
+            return _customerRepository.GetAll();                          
         }
 
         public void CreateCustomer(CustomerModel model)
         {
             //Implement save logic
-            var customers = _dbContext.Customers.FirstOrDefault(a => a.CustomerId == model.CustomerId);
-            if (customers == null)
-            {
-                var newCustomer = new Customer();
-                newCustomer.CustomerId = model.CustomerId;
-                newCustomer.FirstName= model.FirstName;
-                newCustomer.LastName= model.LastName;
-                newCustomer.Email= model.Email;
-                newCustomer.Phone= model.Phone;
-                newCustomer.IsActive = true;
+            Customer customer = new Customer();
+            customer.CustomerId = model.CustomerId;
+            customer.FirstName = model.FirstName;
+            customer.LastName = model.LastName;
+            customer.Email = model.Email;
+            customer.CreatedBy = 1;
+            customer.CreatedDate = System.DateTime.Now; 
 
-                _dbContext.Customers.Add(newCustomer);
-                _dbContext.SaveChanges();
-
-            }
+            _customerRepository.AddItem(customer);
         }
+
+        public CustomerModel GetById(int id)
+        {
+            var customerData = _customerRepository.GetById(id);
+
+            if(customerData is not null)
+            {
+                CustomerModel model = new CustomerModel();
+
+                model.CustomerId= customerData.CustomerId;
+                model.FirstName = customerData.FirstName;
+                model.LastName = customerData.LastName;
+                model.Email = customerData.Email;
+
+                return model;
+            }
+
+            return new CustomerModel();
+        }
+
     }
 }

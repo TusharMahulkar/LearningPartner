@@ -7,7 +7,7 @@ namespace eShopWebApplication.Services.IServiceInterface
     {
         public List<Customer> GetAllCustomers();
 
-        public Customer GetById(int id);
+        public CustomerModel GetById(int id);
 
         public void CreateCustomer(CustomerModel model);
 

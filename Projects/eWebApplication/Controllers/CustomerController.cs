@@ -25,11 +25,10 @@ namespace eShopWebApplication.Controllers
         }
 
 
-        [HttpGet("id")]
-        public Customer GetCustomerById(int id)
+        [HttpGet("{id}")]
+        public CustomerModel GetCustomerById(int id)
         {
-            var customer = _customerService.GetById(id);             
-            return customer;
+            return _customerService.GetById(id);             
         }
 
         [HttpPost("create")]
