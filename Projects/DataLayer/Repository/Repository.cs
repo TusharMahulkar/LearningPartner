@@ -14,10 +14,18 @@ namespace SQLDataLayer.Repository
             _dbset = dbObjectBydependncy.Set<T>();
         }
         
-        public void AddItem(T item)
+        public bool AddItem(T item)
         {
-            _dbset.Add(item);
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbset.Add(item);
+                _dbContext.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;                
+            }            
         }
 
         public List<T> GetAll()

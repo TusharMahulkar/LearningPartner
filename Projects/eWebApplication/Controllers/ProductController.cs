@@ -14,7 +14,14 @@ namespace eShopWebApplication.Controllers
             _productService = productService;
         }
 
-        [HttpGet]
+        [HttpPost("Create")]
+        public List<ProductModel> CreateProduct(ProductModel model)
+        {
+            //return _productService.CreateProduct(model);
+            return null;
+        }
+
+        [HttpGet("all")]
         public List<ProductModel> GetAllProducts()
         {
              return _productService.GetAllProducts();
@@ -23,7 +30,9 @@ namespace eShopWebApplication.Controllers
         [HttpGet("productId")]
         public void GetById(int productId)
         { 
-                _productService.GetById(productId);
+            _productService.GetById(productId);
         }
+
+
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using eShopWebApplication.Models;
+using eShopWebApplication.Services;
+using eShopWebApplication.Services.IServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace eShopWebApplication.Controllers
@@ -7,5 +9,19 @@ namespace eShopWebApplication.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
+        private IOrderService _orderService;
+        public OrderController(IOrderService orderService)
+        {
+            _orderService = orderService;
+        }
+
+
+
+
+        [HttpPost("Create")]
+        public void CreateOrder(OrderModel orderData)
+        {
+            _orderService.CreateOrder(orderData);
+        }
     }
 }
