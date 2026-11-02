@@ -9,8 +9,7 @@ namespace eShopWebApplication.Services
     {
         private IRepository<Order> _orderRepository;
         private IRepository<OrderItem> _orderItemRepository;
-        public OrderService(IRepository<Order> orderRepository,
-            IRepository<OrderItem> orderItemRepository) 
+        public OrderService(IRepository<Order> orderRepository, IRepository<OrderItem> orderItemRepository) 
         {
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository; 
@@ -28,8 +27,11 @@ namespace eShopWebApplication.Services
             var isOrderCreated = _orderRepository.AddItem(newOrder);
             if(isOrderCreated)            
             {
+
+                List<OrderItem> orderItems = new List<OrderItem>(); 
+
                 //Create OrderItems
-                foreach(var order in model.orderItems)
+                foreach (var order in model.orderItems)
                 {
                     OrderItem item = new OrderItem();
                     item.OrderId =   newOrder.OrderId;
@@ -37,7 +39,12 @@ namespace eShopWebApplication.Services
                     item.UnitPrice = order.UnitPrice;
                     item.Quantity = order.Quantity;
 
-                    _orderItemRepository.AddItem(item);
+                    orderItems.Add(item);
+                }
+
+                if(orderItems.Any())
+                {
+                    var result = _orderItemRepository.BulkAddItems(orderItems);                     
                 }
             }
 

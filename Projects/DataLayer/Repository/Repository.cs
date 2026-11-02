@@ -28,6 +28,20 @@ namespace SQLDataLayer.Repository
             }            
         }
 
+        public bool BulkAddItems(List<T> items)
+        {
+            try
+            {
+                _dbset.AddRange(items);
+                _dbContext.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }            
+        }
+
         public List<T> GetAll()
         {
             return _dbset.ToList();

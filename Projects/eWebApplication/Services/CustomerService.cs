@@ -50,7 +50,7 @@ namespace eShopWebApplication.Services
                 return model;
             }
 
-            return new CustomerModel();
+            return null;
         }
 
     }
