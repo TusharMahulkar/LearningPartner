@@ -1,4 +1,5 @@
-﻿using eShopWebApplication.Models;
+﻿using eShopWebApplication.Common;
+using eShopWebApplication.Models;
 using eShopWebApplication.Services.IServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,18 +15,21 @@ namespace eShopWebApplication.Controllers
             _productService = productService;
         }
 
+
+
         [HttpPost("Create")]
         public List<ProductModel> CreateProduct(ProductModel model)
-        {
-            //return _productService.CreateProduct(model);
+        {             
             return null;
         }
 
         [HttpGet("all")]
-        public List<ProductModel> GetAllProducts()
+        public IActionResult GetAllProducts()
         {
-             return _productService.GetAllProducts();
+             var result = _productService.GetAllProducts();
+            return Ok(result.apiSuccessResponse("Prouct data fetch successufully"));
         }
+
 
         [HttpGet("productId")]
         public void GetById(int productId)

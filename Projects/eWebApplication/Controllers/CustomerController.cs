@@ -1,8 +1,10 @@
 ﻿using DataLayer.DataModel;
+using eShopWebApplication.Common;
 using eShopWebApplication.Models;
 using eShopWebApplication.Services;
 using eShopWebApplication.Services.IServiceInterface;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace eShopWebApplication.Controllers
 {
@@ -18,63 +20,42 @@ namespace eShopWebApplication.Controllers
         }
 
         [HttpGet("all")]
-        public ApiResponse<Customer> GetAllCustomer()
+        public IActionResult GetAllCustomer()
         {
-            ApiResponse<Customer> apiResponse = new ApiResponse<Customer>();
-
+            List<Customer> result = new List<Customer>();
             try
             {
-                var data = _customerService.GetAllCustomers();
-                apiResponse.IsSucess = true;
-                apiResponse.Data.AddRange(data);
-                apiResponse.Message = "Customer fetched successfully";
-                apiResponse.statusCode = 200;
-                apiResponse.totalRecords = data.Count();
+                result = _customerService.GetAllCustomers();
+                return Ok(result.apiSuccessResponse("Customer Fetch sucessully"));
             }
             catch (Exception ex)
             {
-                apiResponse.IsSucess = false;
-                apiResponse.Message = "Unable to fetch the customers data, please contact administrator";
-                apiResponse.statusCode = 500;
+                result.apiErrorResponse("Error occured while fetching the customer", ex.ToString());
+                return BadRequest(result);
             }
-
-            return apiResponse;
         }
 
 
         [HttpGet("{id}")]
-        public ApiResponse<CustomerModel> GetCustomerById(int id)
+        public IActionResult GetCustomerById(int id)
         {
-            ApiResponse<CustomerModel> apiResponse = new ApiResponse<CustomerModel>();
-
+            List<Customer> result = new List<Customer>();
             try
             {
                 var data = _customerService.GetById(id);
                 if (data is not null)
                 {
-                    apiResponse.Data.Add(data);
-                    apiResponse.hasMoreData = false;
-                    apiResponse.totalRecords = 1;
-                    apiResponse.Message = "Customer Data read successfully.";
-                    apiResponse.ErrorMessage = new List<string>();
+                    return Ok(data.apiSuccessResponse("Customer Found."));
                 }
                 else
-                {                     
-                    apiResponse.hasMoreData = false;
-                    apiResponse.totalRecords = 0;
-                    apiResponse.statusCode = 204;
-                    apiResponse.Message = $"Customer with Id : {id} not found.";
-                    apiResponse.ErrorMessage = new List<string>();
+                {
+                    return BadRequest(data.apiErrorResponse($"Customer with Id {id} not found", ""));
                 }
             }
             catch (Exception ex)
             {
-                apiResponse.hasMoreData = false;
-                apiResponse.totalRecords = 0;
-                apiResponse.Message = $"Exception occured while fetching the customer ID: {id} not found. {ex}";
-                apiResponse.ErrorMessage = new List<string>();
+                return BadRequest();
             }
-            return apiResponse;
         }
 
 
